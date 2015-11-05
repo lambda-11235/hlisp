@@ -1,0 +1,34 @@
+
+This is an attempt to make a more minimal lisp then HLisp.
+
+Notes
+-----
+
+* nil is considered false, and everything else is true.
+  The symbol `true' is returned by = and atom?.
+
+Basic data
+----------
+Cons cell
+Function
+Nil
+Symbol
+
+Primitives
+----------
+cons
+car
+cdr
+=
+atom?
+
+Compile time
+~~~~~~~~~~~~
+if
+label
+lambda
+quote
+
+Needed for the interpreter
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+eval -- Not yet implemented.
