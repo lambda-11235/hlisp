@@ -34,6 +34,7 @@ Run Time - Arguments are evaluated before application.
 (car xs)
 (cdr xs)
 (= x y)
+(apply f xs)
 (atom? x)
 (eval x)
 

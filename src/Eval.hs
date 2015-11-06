@@ -67,6 +67,7 @@ handleApply (Symbol "cons") args = cons args
 handleApply (Symbol "car") args = car args
 handleApply (Symbol "cdr") args = cdr args
 handleApply (Symbol "=") args = eq args
+handleApply (Symbol "apply") args = apply args
 handleApply (Symbol "atom?") args = atomq args
 handleApply (Symbol "eval") args = lispEval args
 handleApply (Symbol "if") args = lispIf args
@@ -90,6 +91,32 @@ handleApply datum args = do datum' <- eval datum
 -- | Applies a function to a list of arguments.
 applyFunction :: LDatum -> LDatum -> LispState
 applyFunction f@(Function vars body flenv) args =
+    do args' <- evalArgs args
+       applyGeneral f vars body flenv args'
+  where
+    evalArgs Nil = return Nil
+    evalArgs (Cons x xs) = do x' <- eval x
+                              xs' <- evalArgs xs
+                              return $ Cons x' xs'
+
+
+
+-- | Applies a macro to a list of arguments.
+applyMacro :: LDatum -> LDatum -> LispState
+applyMacro m@(Macro vars body flenv) args =
+    do ret <- applyGeneral m vars body flenv args
+       eval ret
+
+
+-- | Does general application for both functions and macros. Does not evaluate
+-- arguments or return values.
+applyGeneral :: LDatum   -- ^ The lisp datum being applied.
+             -> [String] -- ^ Its argument list.
+             -> LDatum   -- ^ Its executing body.
+             -> Env      -- ^ The local environment it was created in.
+             -> LDatum   -- ^ The argumnents to apply.
+             -> LispState
+applyGeneral f vars body flenv args =
     do (Envs genv lenv) <- get
        put $ Envs genv (M.union lenv flenv)
        remap vars args
@@ -99,34 +126,11 @@ applyFunction f@(Function vars body flenv) args =
        return ret
   where
     remap (var:vars) (Cons arg args) =
-      do arg' <- eval arg
-         (Envs genv lenv) <- get
-         put $ Envs genv (M.insert var arg' lenv)
-         remap vars args
-    remap (_:_) Nil = incorrectNumArgs (show f) args
-    remap [] (Cons _ _) = incorrectNumArgs (show f) args
-    remap [] Nil = return Nil
-
-
-
--- NOTE: This function differ from applyFunction on evaluation strategy.
--- | Applies a macro to a list of arguments.
-applyMacro :: LDatum -> LDatum -> LispState
-applyMacro m@(Macro vars body flenv) args =
-    do (Envs genv lenv) <- get
-       put $ Envs genv (M.union lenv flenv)
-       remap vars args
-       ret <- eval body
-       (Envs genv _) <- get
-       put $ Envs genv lenv
-       eval ret
-  where
-    remap (var:vars) (Cons arg args) =
       do (Envs genv lenv) <- get
          put $ Envs genv (M.insert var arg lenv)
          remap vars args
-    remap (_:_) Nil = incorrectNumArgs (show m) args
-    remap [] (Cons _ _) = incorrectNumArgs (show m) args
+    remap (_:_) Nil = incorrectNumArgs (show f) args
+    remap [] (Cons _ _) = incorrectNumArgs (show f) args
     remap [] Nil = return Nil
 
 
@@ -165,6 +169,16 @@ eq (Cons x (Cons y Nil)) = do x' <- eval x
                               else
                                 return $ Nil
 eq args = incorrectNumArgs "=" args
+
+
+
+apply (Cons f (Cons args Nil)) =
+    do f' <- eval f
+       args' <- eval args
+       case f' of
+         (Function vars body flenv) -> applyGeneral f' vars body flenv args'
+         x -> fail $ "Only functions can be applied: " ++ (show x)
+apply args = incorrectNumArgs "apply" args
 
 
 
