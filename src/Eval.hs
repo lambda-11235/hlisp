@@ -91,7 +91,7 @@ handleApply datum args = do datum' <- eval datum
 applyFunction :: LDatum -> LDatum -> LispState
 applyFunction f@(Function vars body flenv) args =
     do (Envs genv lenv) <- get
-       put $ Envs genv (M.union flenv lenv)
+       put $ Envs genv (M.union lenv flenv)
        remap vars args
        ret <- eval body
        (Envs genv _) <- get
@@ -114,7 +114,7 @@ applyFunction f@(Function vars body flenv) args =
 applyMacro :: LDatum -> LDatum -> LispState
 applyMacro m@(Macro vars body flenv) args =
     do (Envs genv lenv) <- get
-       put $ Envs genv (M.union flenv lenv)
+       put $ Envs genv (M.union lenv flenv)
        remap vars args
        ret <- eval body
        (Envs genv _) <- get

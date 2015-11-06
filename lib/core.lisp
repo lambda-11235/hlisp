@@ -26,18 +26,24 @@
 (defun and (x y) (if x y x))
 (defun or (x y) (if x x y))
 
+
 (defun nil? (x) (= x ()))
 (defun cons? (x) (not (atom? x)))
 
+
 (defun id (x) x)
 (defun const (x) (lambda (y) x))
+
 
 (defun map (f xs)
   (if (nil? xs)
     ()
     (cons (f (car xs)) (map f (cdr xs)))))
 
+
 (defun reduce (f x xs)
   (if (nil? xs)
     x
     (reduce f (f x (car xs)) (cdr xs))))
+
+(defun last (xs) (reduce (lambda (x y) y) () xs))

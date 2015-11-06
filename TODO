@@ -1,2 +1,5 @@
 
 * Add syntax for cons cells (ie. ('a . 'b)).
+* Remove duplication among functions for defining and applying functions and
+  macros.
+* Implement apply primitive.
