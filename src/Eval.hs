@@ -77,6 +77,7 @@ handleApply (Symbol name) args = do datum <- handleLookup name
                                       f@(Function _ _ _) -> handleApply f args
                                       _ -> fail $ "Non-function application: " ++ (show datum)
 handleApply f@(Function _ _ _) args = applyFunction f args
+handleApply Nil args = fail $ "Nil cannot be applied: " ++ (show args)
 handleApply datum args = do datum' <- eval datum
                             handleApply datum' args
 
@@ -133,7 +134,7 @@ cdr args = incorrectNumArgs "cdr" args
 
 eq (Cons x (Cons y Nil)) = do x' <- eval x
                               y' <- eval y
-                              if x == y then
+                              if x' == y' then
                                 return lispTrue
                               else
                                 return $ Nil
