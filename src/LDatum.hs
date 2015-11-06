@@ -3,15 +3,25 @@ module LDatum where
 
 import Data.List (intersperse)
 
+import Data.Map (Map)
+
+type Env = Map String LDatum
+
+
+
+-- | The lisp data types. The function contains the names of its arguments, its
+-- body, and the environment that it was created in.
 data LDatum = Cons LDatum LDatum
-            | Function [String] LDatum
+            | Function [String] LDatum Env
             | Nil
             | Symbol String
             deriving (Eq)
 
+
+
 instance Show LDatum where
   show cc@(Cons _ _) = showCons cc
-  show (Function args body) = "<lambda (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
+  show (Function args body _) = "<lambda (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
   show Nil = "()"
   show (Symbol name) = name
 
@@ -23,12 +33,21 @@ showCons xs@(Cons _ (Cons _ _)) = '(' : showCons' xs
     showCons' (Cons x y) = "(" ++ (show x) ++ " . " ++ (show y) ++ "))"
 showCons (Cons x y) = "(" ++ (show x) ++ " . " ++ (show y) ++ ")"
 
-lispTrue :: LDatum
-lispTrue = Symbol "true"
 
+
+-- | The true symbol for HLisp-Min.
+lispTrue :: LDatum
+lispTrue = Symbol "t"
+
+
+
+-- | Convenience quoting function.
 quoteDatum :: LDatum -> LDatum
 quoteDatum x = (Cons (Symbol "quote") (Cons x Nil))
 
+
+
+-- | Turns a Haskell list into a list lisp.
 lispListify :: [LDatum] -> LDatum
 lispListify [] = Nil
 lispListify (x:xs) = Cons x (lispListify xs)

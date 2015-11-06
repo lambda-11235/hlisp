@@ -1,11 +1,14 @@
 
-This is an attempt to make a more minimal lisp then HLisp.
+This is an attempt to make a more minimal lisp then any other. This is for
+theoretical purposes only.
 
 Notes
 -----
 
 * nil is considered false, and everything else is true.
-  The symbol `true' is returned by = and atom?.
+  The symbol 't' is returned by = and atom?.
+
+* There is no IO in HLisp-Min, only the REPL is available.
 
 Basic data
 ----------
@@ -16,19 +19,18 @@ Symbol
 
 Primitives
 ----------
+Run Time - Arguments are evaluated before application.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cons
 car
 cdr
 =
 atom?
+eval
 
-Compile time
-~~~~~~~~~~~~
+Compile time - Arguments are passed before evaluation.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if
 label
 lambda
 quote
-
-Needed for the interpreter
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-eval -- Not yet implemented.

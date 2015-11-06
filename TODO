@@ -1,2 +1,4 @@
 
 * Add syntax for cons cells (ie. ('a . 'b)).
+* Allow the evaluation of files before repl launch.
+* Add macros.

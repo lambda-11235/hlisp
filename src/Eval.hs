@@ -6,65 +6,97 @@ import LDatum
 import Control.Monad.State
 import qualified Data.Map as M
 
-type LispState = StateT (M.Map String LDatum) IO LDatum
+-- | Represents both the global and local environments.
+data Envs = Envs { globalEnv :: Env
+                 , localEnv :: Env
+                 }
+
+emptyEnvs :: Envs
+emptyEnvs = Envs M.empty M.empty
 
 
 
-incorrectNumArgs :: String -> LDatum -> LispState
+type LispState = StateT Envs IO LDatum
+
+
+
+-- | Called whenever the incorrect number of arguments is given to something.
+incorrectNumArgs :: String -- ^ The thing that was given the wrong number of args.
+                 -> LDatum -- ^ A list of the arguments.
+                 -> LispState
 incorrectNumArgs name args = fail $ "Incorrect number of arguments to " ++ name
                                     ++ ": " ++ (show args)
 
 
 
+-- | Evaluates a lisp datum.
 eval :: LDatum -> LispState
 eval (Cons x xs) = handleApply x xs
-eval f@(Function _ _) = return f
+eval f@(Function _ _ _) = return f
 eval Nil = return Nil
 eval (Symbol name) = handleLookup name
 
 
 
+-- | Evaluates a lisp data.
+evals :: [LDatum] -> LispState
+evals [] = return Nil
+evals [x] = eval x
+evals (x:xs) = do eval x
+                  evals xs
+
+
+
+-- | Looks up the value in a symbol first in the local environment and then the
+-- global one.
 handleLookup :: String -> LispState
-handleLookup name = do vars <- get
-                       case M.lookup name vars of
-                         Just datum -> return datum
-                         Nothing -> fail $ "Unbounded symbol: " ++ name
+handleLookup name =
+    do (Envs genv lenv) <- get
+       case M.lookup name lenv of
+         Just datum -> return datum
+         Nothing -> case M.lookup name genv of
+                      Just datum -> return datum
+                      _ -> fail $ "Unbounded symbol: " ++ name
 
 
 
+-- | Handles an application of a special form or function.
 handleApply :: LDatum -> LDatum -> LispState
 handleApply (Symbol "cons") args = cons args
 handleApply (Symbol "car") args = car args
 handleApply (Symbol "cdr") args = cdr args
 handleApply (Symbol "=") args = eq args
 handleApply (Symbol "atom?") args = atomq args
+handleApply (Symbol "eval") args = lispEval args
 handleApply (Symbol "if") args = lispIf args
 handleApply (Symbol "label") args = label args
 handleApply (Symbol "lambda") args = lambda args
 handleApply (Symbol "quote") args = quote args
 handleApply (Symbol name) args = do datum <- handleLookup name
                                     case datum of
-                                      f@(Function _ _) -> handleApply f args
+                                      f@(Function _ _ _) -> handleApply f args
                                       _ -> fail $ "Non-function application: " ++ (show datum)
-handleApply f@(Function _ _) args = applyFunction f args
+handleApply f@(Function _ _ _) args = applyFunction f args
 handleApply datum args = do datum' <- eval datum
                             handleApply datum' args
---handleApply datum _ = fail $ "Non-function application: " ++ (show datum)
 
 
 
+-- | Applies a function to a list of arguments.
 applyFunction :: LDatum -> LDatum -> LispState
-applyFunction (Function vars body) args =
-    do oldVars <- get
+applyFunction (Function vars body flenv) args =
+    do (Envs genv lenv) <- get
+       put $ Envs genv (M.union flenv lenv)
        remap vars args
        ret <- eval body
-       put oldVars
+       (Envs genv _) <- get
+       put $ Envs genv lenv
        return ret
   where
     remap (var:vars) (Cons arg args) =
       do arg' <- eval arg
-         m <- get
-         put $ M.insert var arg' m
+         (Envs genv lenv) <- get
+         put $ Envs genv (M.insert var arg' lenv)
          remap vars args
     remap (_:_) Nil = incorrectNumArgs "<function>" args
     remap [] (Cons _ _) = incorrectNumArgs "<function>" args
@@ -117,6 +149,12 @@ atomq args = incorrectNumArgs "atom?" args
 
 
 
+lispEval (Cons x Nil) = do x' <- eval x
+                           eval x'
+lispEval args = incorrectNumArgs "eval" args
+
+
+
 lispIf (Cons cond (Cons x (Cons y Nil))) =
     do cond' <- eval cond
        case cond' of
@@ -130,17 +168,19 @@ lispIf args = incorrectNumArgs "if" args
 
 label (Cons (Symbol name) (Cons x Nil)) =
     do x' <- eval x
-       vars <- get
-       put $ M.insert name x' vars
+       (Envs genv lenv) <- get
+       put $ Envs (M.insert name x' genv) lenv
        return Nil
 label (Cons x (Cons _ Nil)) = fail $ "First argument to label should be a symbol: " ++ (show x)
 label args = incorrectNumArgs "label" args
 
 
 
-lambda (Cons args (Cons body Nil)) = case getArgs args of
-                                       Just args' -> return $ Function args' body
-                                       Nothing -> argsError args
+lambda (Cons args (Cons body Nil)) =
+    do (Envs _ lenv) <- get
+       case getArgs args of
+         Just args' -> return $ Function args' body lenv
+         Nothing -> argsError args
   where
     getArgs (Cons (Symbol var) xs) = do vars <- getArgs xs
                                         return $ var:vars
