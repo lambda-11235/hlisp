@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 -- The name of the package.
-name:                hlisp-min
+name:                hlisp
 
 -- The package version.  See the Haskell package versioning policy (PVP) 
 -- for standards guiding when and how versions should be incremented.
@@ -40,7 +40,7 @@ build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or a 
 -- README.
-extra-source-files:  README
+extra-source-files:  README TODO
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
