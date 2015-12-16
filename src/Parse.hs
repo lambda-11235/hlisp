@@ -8,6 +8,7 @@ module Parse (lispParse, lispParseDatum) where
 
 import LDatum
 
+import Data.Char (isSpace)
 import Text.ParserCombinators.Parsec
 
 -- | Parses a string into a list object.
@@ -60,7 +61,7 @@ symbol = do name <- many1 nonspecial
             return $ Symbol name
 
 nonspecial :: Parser Char
-nonspecial = oneOf (['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "!@#$%^&*{}[]|?/\\,.<>;:_-+=")
+nonspecial = satisfy (\ ch -> (not $ ch `elem` "()';.") && (not $ isSpace ch))
 
 special :: Parser Char
-special = oneOf "()'\""
+special = oneOf "()';."

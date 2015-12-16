@@ -12,8 +12,8 @@ type Env = Map String LDatum
 -- | The lisp data types. The function contains the names of its arguments, its
 -- body, and the environment that it was created in. Same for macros.
 data LDatum = Cons LDatum LDatum
-            | Function [String] LDatum Env
-            | Macro [String] LDatum Env
+            | Function (Either String [String]) LDatum Env
+            | Macro (Either String [String]) LDatum Env
             | Nil
             | Symbol String
             deriving (Eq)
@@ -22,8 +22,10 @@ data LDatum = Cons LDatum LDatum
 
 instance Show LDatum where
   show cc@(Cons _ _) = showCons cc
-  show (Function args body _) = "<lambda (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
-  show (Macro args body _) = "<macro (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
+  show (Function (Left arg) body _) = "<lambda " ++ (show arg) ++ " ...>"
+  show (Function (Right args) body _) = "<lambda (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
+  show (Macro (Left arg) body _) = "<macro " ++ (show arg) ++ " ...>"
+  show (Macro (Right args) body _) = "<macro (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
   show Nil = "()"
   show (Symbol name) = name
 

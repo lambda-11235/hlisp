@@ -110,11 +110,11 @@ applyMacro m@(Macro vars body flenv) args =
 
 -- | Does general application for both functions and macros. Does not evaluate
 -- arguments or return values.
-applyGeneral :: LDatum   -- ^ The lisp datum being applied.
-             -> [String] -- ^ Its argument list.
-             -> LDatum   -- ^ Its executing body.
-             -> Env      -- ^ The local environment it was created in.
-             -> LDatum   -- ^ The argumnents to apply.
+applyGeneral :: LDatum                   -- ^ The lisp datum being applied.
+             -> (Either String [String]) -- ^ Its argument list.
+             -> LDatum                   -- ^ Its executing body.
+             -> Env                      -- ^ The local environment it was created in.
+             -> LDatum                   -- ^ The argumnents to apply.
              -> LispState
 applyGeneral f vars body flenv args =
     do (Envs genv lenv) <- get
@@ -125,13 +125,19 @@ applyGeneral f vars body flenv args =
        put $ Envs genv lenv
        return ret
   where
-    remap (var:vars) (Cons arg args) =
+    remap (Left var) args =
+      do (Envs genv lenv) <- get
+         put $ Envs genv (M.insert var args lenv)
+         return Nil
+    remap (Right vars) args = remapArgList vars args
+
+    remapArgList (var:vars) (Cons arg args) =
       do (Envs genv lenv) <- get
          put $ Envs genv (M.insert var arg lenv)
-         remap vars args
-    remap (_:_) Nil = incorrectNumArgs (show f) args
-    remap [] (Cons _ _) = incorrectNumArgs (show f) args
-    remap [] Nil = return Nil
+         remapArgList vars args
+    remapArgList (_:_) Nil = incorrectNumArgs (show f) args
+    remapArgList [] (Cons _ _) = incorrectNumArgs (show f) args
+    remapArgList [] Nil = return Nil
 
 
 
@@ -223,9 +229,11 @@ macro = lambdaOrMacro Macro "macro"
 
 lambdaOrMacro constructor name (Cons args (Cons body Nil)) =
     do (Envs _ lenv) <- get
-       case getArgs args of
-         Just args' -> return $ constructor args' body lenv
-         Nothing -> argsError args
+       case args of
+        (Symbol var) -> return $ constructor (Left var) body lenv
+        _ -> case getArgs args of
+              Just args' -> return $ constructor (Right args') body lenv
+              Nothing -> argsError args
   where
     getArgs (Cons (Symbol var) xs) = do vars <- getArgs xs
                                         return $ var:vars

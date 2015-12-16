@@ -3,23 +3,19 @@
 
 ;; Forms a list from its arguments.
 ;; (list (a b c ...))
-(label list (macro (xs)
-                   (if (= xs ())
-                     ()
-                     (cons 'cons
-                           (cons (car xs)
-                                 (cons (cons 'list (cons (cdr xs) ()))
-                                       ()))))))
-
+(label list (lambda xs xs))
 
 (label defun (macro (name args body)
-                    (list ('label name
-                           (list ('lambda args body))))))
+                    (list 'label name (list 'lambda args body))))
 
 
 (label defmacro (macro (name args body)
-                    (list ('label name
-                           (list ('macro args body))))))
+                    (list 'label name (list 'macro args body))))
+
+(defun caar (xs) (car (car xs)))
+(defun cadr (xs) (car (cdr xs)))
+(defun cdar (xs) (cdr (car xs)))
+(defun cddr (xs) (cdr (cdr xs)))
 
 
 (defun not (x) (if x () 't))
@@ -46,4 +42,21 @@
     x
     (reduce f (f x (car xs)) (cdr xs))))
 
+
 (defun last (xs) (reduce (lambda (x y) y) () xs))
+
+
+(defmacro let (binds body)
+  (if (nil? binds)
+      body
+      (list (list 'lambda (list (car binds))
+                  (list 'let (cddr binds) body))
+            (cadr binds))))
+
+
+(defmacro cond xs
+  (if (nil? xs)
+      ()
+      (list 'if (car xs)
+            (cadr xs)
+            (cons 'cond (cddr xs)))))

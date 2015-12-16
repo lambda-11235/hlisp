@@ -1,0 +1,157 @@
+\documentclass[12pt]{article}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{HLisp Specification}
+\author{Taran Lynn}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  HLisp is an attempt to make a minimal lisp with a very small core. All
+  computations are done through list and symbol processing, numeric support is
+  not built-in. IO is also unsupported, as everything is expected to be done from
+  the REPL. As such HLisp is obviously designed for ease of implementation and
+  academic research.
+\end{abstract}
+
+\tableofcontents
+
+\pagebreak
+
+
+
+\section{Data Types}
+
+HLisp supports four different primitive data types, which include
+
+\begin{description}
+\item[Cons Cells] Cons cells are pairs of data. They have two slots which can
+  hold any other lisp datum. If \verb!a! and \verb!b! are data, then a cons
+  cell is denoted as \verb!(a . b)!.
+
+\item[Functions] Functions should fulfill several requirements.
+  \begin{enumerate}
+  \item Functions should eagerly evaluate their arguments.
+
+  \item All functions should be lexically scoped.
+  \end{enumerate}
+
+\item[Macros] Macros are data just like functions, except that their arguments
+  are passed unevaluated. That is, if the symbol \verb!a! is passed as an
+  argument, then the macro will bind the symbol \verb!a! to the appropriate
+  variable, and not bind whatever the symbol \verb!a! is bound to in the current
+  environment.
+
+\item[Nil] Nil is a datum that represents nothing, the end of a list, or boolean
+  false. This paper denotes it as ().
+
+\item[Symbols] Symbols are named identifiers. They consist of any character the
+  isn't whitespace or `(', `)', `;', or `.'.
+\end{description}
+
+There are two things that should be noted about HLisp's data. First, all data is
+immutable. Second, all data that isn't nil represents boolean true, and nil
+represents boolean false.
+
+In addition to these basic data types their is a compound type, which is the
+list. A list is either the nil datum or a cons cell whose second slot contains a
+list. A list is denoted by a group of space separated data within parenthesis.
+
+\begin{verbatim}
+list = (datum . list)
+     | ()
+\end{verbatim}
+
+\section{Syntax and Semantics}
+
+\subsection{EBNF Grammar}
+
+\begin{verbatim}
+datum = list | quote | symbol ;
+
+data = { datum } ;
+
+list = '(', data, ')' ;
+
+quote = "'", datum ;
+
+comment = ';', { nonnewline }
+
+symbol = { nonspecial }
+
+nonspecial = ? any character except whitespace or '(', ')', ''', and '.'. ?
+
+nonspecial = ? any character that doesn't create a new line ?
+\end{verbatim}
+
+\subsection{Evaluation}
+
+There are a few evaluation rules in HLisp, mainly
+
+\begin{enumerate}
+\item All quotes \verb!'a! are expanded to \verb!(quote a)!.
+
+\item Symbols are looked up in the environment for a datum value.
+
+\item For a list \verb!(f ...)!, if \verb!f! corresponds to the name of a
+  special form, than an action specific to that special form is performed. If
+  \verb!f! is a macro or function, then it is applied to the
+  arguments. Otherwise, \verb!f! is evaluated and the process is repeated.
+
+\item Function arguments are evaluated and then passed to the function.
+
+\item Macro arguments are passed unevaluated, but the return value of the macro
+  is evaluated.
+\end{enumerate}
+
+\section{Primitive Functions}
+
+The following are primitive functions defined in the run-time implementation.
+
+\begin{description}
+\item[(cons x y)] Creates a cons cell whose first slot is occupied by \verb!x!
+  and second is occupied by \verb!y!.
+
+\item[(car xs)] Returns the datum in the first slot of a cons cell.
+
+\item[(cdr xs)] Returns the datum in the second slot of a cons cell.
+
+\item[(= x y)] Returns the symbol \verb!t! if the two objects are equal,
+  otherwise it returns nil.
+
+\item[(apply f xs)] Applies the function \verb!f! to the list \verb!xs!.
+
+\item[(atom? x)] Returns the symbol \verb!t! is \verb!x! is not a cons cell,
+  otherwise nil is returned.
+
+\item[(eval x)] Evaluates \verb!x! in the context of the current environment.
+\end{description}
+
+\section{Special Forms}
+
+The following are special forms, which are evaluated according to special rules.
+
+\begin{description}
+\item[(if pred x y)] Evaluates \verb!pred! and does one of two things based on
+  its value. If it is nil, then \verb!y! is evaluated and returned. Otherwise,
+  then \verb!x! is evaluated and returned
+
+\item[(label name x)] Binds the symbol \verb!name! to \verb!x! so that when it's
+  evaluated it returns \verb!x!.
+
+\item[(lambda (args...) body) or (lambda args body)] Creates a new
+  function. When evaluated this function evaluates \verb!body! with the
+  variable symbols rebound to the argument's values.  Function arguments are
+  either a list of symbols to be bound to positional argument, or a single
+  symbol bound to a list of the arguments. This form should also handle
+  closures.
+
+\item[(macro (args...) body) or (macro args body)] Works just like
+  \verb!lambda!, except that it creates a macro.
+
+\item[(quote x)] Returns its argument \verb!x! unevaluated.
+\end{description}
+
+\end{document}

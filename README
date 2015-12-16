@@ -1,47 +1,8 @@
 
+=====
+HLisp
+=====
+
 This is an attempt to make a lisp who's base is very minimal. This is for
-theoretical purposes only. All abstractions should be built from the primives
-below (see lib/).
-
-Notes
------
-
-* nil is considered false, and everything else is true.
-  The symbol 't' is returned by = and atom?.
-
-* There is no IO in HLisp, only the REPL is available.
-
-* Macros are passed unevaluate arguments, and then their return value is
-  evaluated.
-
-* Functions and macros are different data types.
-
-* Closures are supported.
-
-Basic data types
-----------------
-Cons cell
-Function
-Macro
-Nil
-Symbol
-
-Primitives
-----------
-Run Time - Arguments are evaluated before application.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(cons x y)
-(car xs)
-(cdr xs)
-(= x y)
-(apply f xs)
-(atom? x)
-(eval x)
-
-Compile time - Arguments are passed before evaluation.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(if b x y)
-(label name x)
-(lambda (args...) body)
-(macro (args...) body) - Like lambda, only declares a macro.
-(quote x)
+theoretical purposes only. See doc/formal/formal.pdf for a specification of
+HLisp. See lib/ for example code.
