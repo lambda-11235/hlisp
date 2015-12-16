@@ -1,6 +1,7 @@
 
 import Eval
 import Parse
+import LDatum
 
 import Control.Monad.State
 import qualified Data.Map as M
@@ -8,7 +9,7 @@ import System.Environment (getArgs)
 import System.IO
 
 main = do args <- getArgs
-          envs <- evalFiles args emptyEnvs
+          envs <- evalFiles args initEnvs
           repl envs
 
 evalFiles :: [String] -> Envs -> IO Envs
@@ -20,7 +21,7 @@ evalFiles (file:files) envs =
                         evalFiles files envs
          Right xs -> do (x', envs') <- runStateT (evals xs) envs
                         evalFiles files envs'
-       
+
 
 repl envs = do hPutStr stdout "> "
                hFlush stdout

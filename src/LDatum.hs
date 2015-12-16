@@ -1,27 +1,49 @@
 
 module LDatum where
 
+import Control.Monad.State (StateT)
 import Data.List (intersperse)
-
 import Data.Map (Map)
+
+
+
+type LispState = StateT Envs IO LDatum
 
 type Env = Map String LDatum
 
+-- | Represents both the global and local environments.
+data Envs = Envs { globalEnv :: Env
+                 , localEnv :: Env
+                 }
 
 
 -- | The lisp data types. The function contains the names of its arguments, its
 -- body, and the environment that it was created in. Same for macros.
 data LDatum = Cons LDatum LDatum
+            | PrimFunc (LDatum -> LispState)
             | Function (Either String [String]) LDatum Env
             | Macro (Either String [String]) LDatum Env
             | Nil
             | Symbol String
-            deriving (Eq)
+
+
+
+instance Eq LDatum where
+  (==) (Cons a b) (Cons c d) = (a == c) && (b == d)
+  (==) (PrimFunc _) (PrimFunc _) = False
+  (==) (Function a1 b1 e1) (Function a2 b2 e2) =
+    (a1 == a2) && (b1 == b1) && (e1 == e2)
+  (==) (Macro a1 b1 e1) (Macro a2 b2 e2) =
+    (a1 == a2) && (b1 == b1) && (e1 == e2)
+  (==) Nil Nil = True
+  (==) (Symbol a) (Symbol b) = a == b
+  (==) _ _ = False
 
 
 
 instance Show LDatum where
   show cc@(Cons _ _) = showCons cc
+  show (PrimFunc _) = "<primitive function>"
   show (Function (Left arg) body _) = "<lambda " ++ (show arg) ++ " ...>"
   show (Function (Right args) body _) = "<lambda (" ++ ((intersperse " " args) >>= id) ++ ") ...>"
   show (Macro (Left arg) body _) = "<macro " ++ (show arg) ++ " ...>"
