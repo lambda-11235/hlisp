@@ -2,3 +2,4 @@
 * Add syntax for cons cells (ie. ('a . 'b)).
 * Remove duplication among functions for defining functions and
   macros.
+* Add variable argument functions.

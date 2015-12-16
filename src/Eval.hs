@@ -217,10 +217,14 @@ label args = incorrectNumArgs "label" args
 
 
 
-lambda (Cons args (Cons body Nil)) =
+lambda = lambdaOrMacro Function "lambda"
+
+macro = lambdaOrMacro Macro "macro"
+
+lambdaOrMacro constructor name (Cons args (Cons body Nil)) =
     do (Envs _ lenv) <- get
        case getArgs args of
-         Just args' -> return $ Function args' body lenv
+         Just args' -> return $ constructor args' body lenv
          Nothing -> argsError args
   where
     getArgs (Cons (Symbol var) xs) = do vars <- getArgs xs
@@ -229,23 +233,7 @@ lambda (Cons args (Cons body Nil)) =
     getArgs _ = Nothing
     argsError args = fail $ "All arguments should be symbols: " ++ (show args)
 
-lambda args = incorrectNumArgs "lambda" args
-
-
-
-macro (Cons args (Cons body Nil)) =
-    do (Envs _ lenv) <- get
-       case getArgs args of
-         Just args' -> return $ Macro args' body lenv
-         Nothing -> argsError args
-  where
-    getArgs (Cons (Symbol var) xs) = do vars <- getArgs xs
-                                        return $ var:vars
-    getArgs Nil = return []
-    getArgs _ = Nothing
-    argsError args = fail $ "All arguments should be symbols: " ++ (show args)
-
-macro args = incorrectNumArgs "macro" args
+lambdaOrMacro _ name args = incorrectNumArgs name args
 
 
 
