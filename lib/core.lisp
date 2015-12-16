@@ -1,8 +1,6 @@
 
 ;; Core functions that are helpful
 
-;; Forms a list from its arguments.
-;; (list (a b c ...))
 (label list (lambda xs xs))
 
 (label defun (macro (name args body)

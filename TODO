@@ -1,5 +1,5 @@
 
+* Primitive functions should not be treated as special forms. As they are now,
+   they cannot be passed to other functions.
 * Add syntax for cons cells (ie. ('a . 'b)).
-* Remove duplication among functions for defining functions and
-  macros.
 * Formalize the specification, include more detail.

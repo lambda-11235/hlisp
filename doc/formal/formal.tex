@@ -11,9 +11,9 @@
 \begin{abstract}
   HLisp is an attempt to make a minimal lisp with a very small core. All
   computations are done through list and symbol processing, numeric support is
-  not built-in. IO is also unsupported, as everything is expected to be done from
-  the REPL. As such HLisp is obviously designed for ease of implementation and
-  academic research.
+  not built-in. IO is also unsupported, as everything is expected to be done
+  from the REPL. As such HLisp is obviously designed for ease of implementation
+  and academic research.
 \end{abstract}
 
 \tableofcontents
@@ -77,13 +77,13 @@ list = '(', data, ')' ;
 
 quote = "'", datum ;
 
-comment = ';', { nonnewline }
+comment = ';', { nonnewline } ;
 
-symbol = { nonspecial }
+symbol = { nonspecial } ;
 
-nonspecial = ? any character except whitespace or '(', ')', ''', and '.'. ?
+nonspecial = ? any character except whitespace or '(', ')', ''', and '.'. ? ;
 
-nonspecial = ? any character that doesn't create a new line ?
+nonspecial = ? any character that doesn't create a new line ? ;
 \end{verbatim}
 
 \subsection{Evaluation}
@@ -105,6 +105,23 @@ There are a few evaluation rules in HLisp, mainly
 \item Macro arguments are passed unevaluated, but the return value of the macro
   is evaluated.
 \end{enumerate}
+
+\subsubsection{More on Macro Evaluation}
+
+Unlike in most lisps macros can be passed around as data (though special forms
+can't be). If we pass a macro to a function, and that macro is invoked, then the
+result will be the same as if we replaced the variable with the macro's bounded
+name. For example, consider the following expansion.
+
+\begin{verbatim}
+((lambda (m a) (m (a 'b) a)) let 'a)
+=> ((lambda (a) (let (a 'b) a)) 'a)
+=> ((lambda (a) ((lambda (a) a) 'b)) 'a)
+=> b
+\end{verbatim}
+
+This could not be done if \verb!f! was passed as a normal function. This is a
+trait unique to HLisp (to the best of my knowledge).
 
 \section{Primitive Functions}
 
