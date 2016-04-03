@@ -33,7 +33,20 @@
                      't (+ (* (pred x) y) y)))
 
 
+(defun < (x y) (cond (= y 0) ()
+                     (= x 0) 't
+                     't (< (pred x) (pred y))))
+(defun > (x y) (< y x))
+(defun <= (x y) (mor (= x y) (< x y)))
+(defun >= (x y) (mor (= x y) (> x y)))
+
+
 ;; abs-diff(x, y) = |x - y|
 (defun abs-diff (x y) (cond (= x 0) y
                             (= y 0) x
                             't (abs-diff (pred x) (pred y))))
+
+
+(defun fact (x) (if (= x 0)
+                    1
+                  (* x (fact (pred x)))))
