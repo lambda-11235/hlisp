@@ -20,9 +20,15 @@
 (defun and (x y) (if x y x))
 (defun or (x y) (if x x y))
 
+;; Macro versions of and and or
+(defmacro mand (x y) (list 'if x y x))
+(defmacro mor (x y) (list 'if x x y))
+
 
 (defun nil? (x) (= x ()))
 (defun cons? (x) (not (atom? x)))
+(defun single? (x) (mand (cons? x)
+                         (atom? (cdr x))))
 
 
 (defun id (x) x)
