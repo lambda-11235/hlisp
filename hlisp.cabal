@@ -46,7 +46,7 @@ extra-source-files:  README TODO
 cabal-version:       >=1.10
 
 
-executable hlisp-min
+executable hlisp
   -- .hs or .lhs file containing the Main module.
   main-is:             Main.hs
 
