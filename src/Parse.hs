@@ -4,25 +4,39 @@ Module: Parse
 The module to parse lisp expressions.
 -}
 
-module Parse (lispParse, lispParseDatum) where
+module Parse (lispParse, obj, objs) where
 
 import LDatum
+import Lexer
 
-import Data.Char (isSpace)
-import Text.ParserCombinators.Parsec
+import Text.Parsec.Combinator
+import Text.Parsec.Error
+import Text.Parsec.Pos
+import Text.Parsec.Prim
 
--- | Parses a string into a list object.
-lispParseDatum :: String -> Either ParseError LDatum
-lispParseDatum = (parse obj "HLisp Object") . strip
+
+type Parser = Parsec [LexOut] ()
+
+
+match :: Token -> Parser ()
+match tok = tokenPrim (show . getToken) pos (match' . getToken)
+  where
+    match' x = if x == tok then Just () else Nothing
+
+symbol :: Parser LDatum
+symbol = tokenPrim (show . getToken) pos (match' . getToken)
+  where
+    match' (TSymbol sym) = Just $ Symbol sym
+    match' _ = Nothing
+
+pos :: (SourcePos -> LexOut -> [LexOut] -> SourcePos)
+pos oldPos (LexOut _ line col _) _ = newPos (sourceName oldPos) line col
+
 
 -- | Parses a string into a series of list objects.
-lispParse :: String -> Either ParseError [LDatum]
-lispParse = (parse objs "HLisp Objects") . strip
+lispParse :: Parser a -> String -> [LexOut] -> Either ParseError a
+lispParse p name toks = runParser p () name toks
 
--- | Strips whitespace from string.
-strip :: String -> String
-strip str = reverse $ dropWhile (`elem` " \t\n\r") $ reverse
-            $ dropWhile (`elem` " \t\n\r") str
 
 -- | A parser for one lisp object.
 obj :: Parser LDatum
@@ -30,38 +44,17 @@ obj = list <|> quote <|> symbol
 
 -- | A parser for multiple lisp object.
 objs :: Parser [LDatum]
-objs = do skipable
-          o <- obj
+objs = do o <- obj
           os <- option [] objs
-          skipable
           return (o : os)
 
 list :: Parser LDatum
-list = do char '('
+list = do match TLParen
           os <- option [] objs
-          char ')'
+          match TRParen
           return $ lispListify os
 
 quote :: Parser LDatum
-quote = do char '\''
-           skipable
+quote = do match TQuote
            l <- obj
            return $ quoteDatum l
-
-skipable :: Parser ()
-skipable = skipMany (space <|> comment)
-
-comment :: Parser Char
-comment = do char ';'
-             manyTill anyChar newline
-             return ';'
-
-symbol :: Parser LDatum
-symbol = do name <- many1 nonspecial
-            return $ Symbol name
-
-nonspecial :: Parser Char
-nonspecial = satisfy (\ ch -> (not $ ch `elem` "()';.") && (not $ isSpace ch))
-
-special :: Parser Char
-special = oneOf "()';."
