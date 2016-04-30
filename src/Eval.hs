@@ -32,7 +32,7 @@ eval (Symbol name) = handleLookup name
 
 
 
--- | Evaluates a lisp data.
+-- | Evaluates lisp data.
 evals :: [LDatum] -> LispState
 evals [] = return Nil
 evals [x] = eval x
@@ -41,8 +41,7 @@ evals (x:xs) = do eval x
 
 
 
--- | Looks up the value in a symbol first in the local environment and then the
--- global one.
+-- | Looks up a value corresponding to a symbol in the environment.
 handleLookup :: String -> LispState
 handleLookup name =
     do env <- get

@@ -57,7 +57,7 @@ showCons (Cons x y) = "(" ++ (show x) ++ " . " ++ (show y) ++ ")"
 
 
 
--- | The true symbol for HLisp-Min.
+-- | The true symbol for HLisp.
 lispTrue :: LDatum
 lispTrue = Symbol "t"
 
