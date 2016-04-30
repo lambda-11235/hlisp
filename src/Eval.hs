@@ -181,6 +181,7 @@ label (Cons (Symbol name) (Cons x Nil)) =
     do env <- get
        x' <- eval x
        let x'' = case x' of
+                  -- Needed for recursive functions
                   (Function args body env) -> Function args body (M.insert name x'' env)
                   (Macro args body env) -> Macro args body (M.insert name x'' env)
                   ld -> ld
