@@ -55,7 +55,7 @@ There are two things that should be noted about HLisp's data. First, all data is
 immutable. Second, all data that isn't nil represents boolean true, and nil
 represents boolean false.
 
-In addition to these basic data types their is a compound type, which is the
+In addition to these basic data types there is a compound type, which is the
 list. A list is either the nil datum or a cons cell whose second slot contains a
 list. A list is denoted by a group of space separated data within parenthesis.
 
@@ -83,7 +83,7 @@ symbol = { nonspecial } ;
 
 nonspecial = ? any character except whitespace or '(', ')', ''', and '.'. ? ;
 
-nonspecial = ? any character that doesn't create a new line ? ;
+nonnewline = ? any character that doesn't create a new line ? ;
 \end{verbatim}
 
 \subsection{Evaluation}
@@ -156,7 +156,9 @@ The following are special forms, which are evaluated according to special rules.
   then \verb!x! is evaluated and returned
 
 \item[(label name x)] Binds the symbol \verb!name! to \verb!x! so that when it's
-  evaluated it returns \verb!x!.
+  evaluated it returns \verb!x!. Binding is restricted to local scope within
+  function definition. So \verb!(lambda (x) (label y x)) 'a! will \textbf{not}
+  create a global variable \verb!y!.
 
 \item[(lambda (args...) body) or (lambda args body)] Creates a new
   function. When evaluated this function evaluates \verb!body! with the
