@@ -8,18 +8,17 @@ import Control.Monad.State
 import qualified Data.Map as M
 
 
-emptyEnvs :: Envs
-emptyEnvs = Envs M.empty M.empty
+emptyEnv :: Env
+emptyEnv = M.empty
 
-initEnvs :: Envs
-initEnvs = Envs (M.fromList [ ("cons", cons)
-                            , ("car", car)
-                            , ("cdr", cdr)
-                            , ("=", eq)
-                            , ("apply", apply)
-                            , ("atom?", atomq)
-                            , ("eval", lispEval)])
-           M.empty
+initEnv :: Env
+initEnv = (M.fromList [ ("cons", cons)
+                      , ("car", car)
+                      , ("cdr", cdr)
+                      , ("=", eq)
+                      , ("apply", apply)
+                      , ("atom?", atomq)
+                      , ("eval", lispEval)])
 
 
 
@@ -46,12 +45,10 @@ evals (x:xs) = do eval x
 -- global one.
 handleLookup :: String -> LispState
 handleLookup name =
-    do (Envs genv lenv) <- get
-       case M.lookup name lenv of
-         Just datum -> return datum
-         Nothing -> case M.lookup name genv of
-                      Just datum -> return datum
-                      _ -> fail $ "Unbounded symbol: " ++ name
+    do env <- get
+       case M.lookup name env of
+        Just datum -> return datum
+        Nothing -> fail $ "Unbounded symbol: " ++ name
 
 
 
@@ -92,9 +89,9 @@ applyPrimFunction f args =
 
 -- | Applies a function to a list of arguments.
 applyFunction :: LDatum -> LDatum -> LispState
-applyFunction f@(Function vars body flenv) args =
+applyFunction f@(Function vars body env) args =
     do args' <- evalArgs args
-       applyGeneral f vars body flenv args'
+       applyGeneral f vars body env args'
   where
     evalArgs Nil = return Nil
     evalArgs (Cons x xs) = do x' <- eval x
@@ -105,8 +102,8 @@ applyFunction f@(Function vars body flenv) args =
 
 -- | Applies a macro to a list of arguments.
 applyMacro :: LDatum -> LDatum -> LispState
-applyMacro m@(Macro vars body flenv) args =
-    do ret <- applyGeneral m vars body flenv args
+applyMacro m@(Macro vars body env) args =
+    do ret <- applyGeneral m vars body env args
        eval ret
 
 
@@ -115,27 +112,26 @@ applyMacro m@(Macro vars body flenv) args =
 applyGeneral :: LDatum                   -- ^ The lisp datum being applied.
              -> (Either String [String]) -- ^ Its argument list.
              -> LDatum                   -- ^ Its executing body.
-             -> Env                      -- ^ The local environment it was created in.
+             -> Env                      -- ^ The environment it was created in.
              -> LDatum                   -- ^ The argumnents to apply.
              -> LispState
-applyGeneral f vars body flenv args =
-    do (Envs genv lenv) <- get
-       put $ Envs genv (M.union lenv flenv)
+applyGeneral f vars body env args =
+    do env' <- get
+       put $ env
        remap vars args
        ret <- eval body
-       (Envs genv _) <- get
-       put $ Envs genv lenv
+       put $ env'
        return ret
   where
     remap (Left var) args =
-      do (Envs genv lenv) <- get
-         put $ Envs genv (M.insert var args lenv)
+      do env <- get
+         put $ M.insert var args env
          return Nil
     remap (Right vars) args = remapArgList vars args
 
     remapArgList (var:vars) (Cons arg args) =
-      do (Envs genv lenv) <- get
-         put $ Envs genv (M.insert var arg lenv)
+      do env <- get
+         put $ M.insert var arg env
          remapArgList vars args
     remapArgList (_:_) Nil =
       case vars of
@@ -155,7 +151,8 @@ apply = PrimFunc apply'
   where
     apply' (Cons f (Cons args Nil)) =
       case f of
-       (Function vars body flenv) -> applyGeneral f vars body flenv args
+       (Function vars body env) -> applyGeneral f vars body env args
+       (PrimFunc f) -> f args
        x -> fail $ "Only functions can be applied: " ++ (show x)
     apply' args = incorrectNumArgs "apply" args 2
 
@@ -182,9 +179,13 @@ lispIf args = incorrectNumArgs "if" args 3
 
 
 label (Cons (Symbol name) (Cons x Nil)) =
-    do x' <- eval x
-       (Envs genv lenv) <- get
-       put $ Envs (M.insert name x' genv) lenv
+    do env <- get
+       x' <- eval x
+       let x'' = case x' of
+                  (Function args body env) -> Function args body (M.insert name x'' env)
+                  (Macro args body env) -> Macro args body (M.insert name x'' env)
+                  ld -> ld
+       put $ M.insert name x'' env
        return Nil
 label (Cons x (Cons _ Nil)) = fail $ "First argument to label should be a symbol: " ++ (show x)
 label args = incorrectNumArgs "label" args 2
@@ -196,11 +197,11 @@ lambda = lambdaOrMacro Function "lambda"
 macro = lambdaOrMacro Macro "macro"
 
 lambdaOrMacro constructor name (Cons args (Cons body Nil)) =
-    do (Envs _ lenv) <- get
+    do env <- get
        case args of
-        (Symbol var) -> return $ constructor (Left var) body lenv
+        (Symbol var) -> return $ constructor (Left var) body env
         _ -> case getArgs args of
-              Just args' -> return $ constructor (Right args') body lenv
+              Just args' -> return $ constructor (Right args') body env
               Nothing -> argsError args
   where
     getArgs (Cons (Symbol var) xs) = do vars <- getArgs xs

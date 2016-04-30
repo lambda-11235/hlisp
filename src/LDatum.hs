@@ -7,14 +7,9 @@ import Data.Map (Map)
 
 
 
-type LispState = StateT Envs IO LDatum
+type LispState = StateT Env IO LDatum
 
 type Env = Map String LDatum
-
--- | Represents both the global and local environments.
-data Envs = Envs { globalEnv :: Env
-                 , localEnv :: Env
-                 }
 
 
 -- | The lisp data types. The function contains the names of its arguments, its

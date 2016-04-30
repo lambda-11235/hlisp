@@ -10,10 +10,10 @@ import System.Environment (getArgs)
 import System.IO
 
 main = do args <- getArgs
-          envs <- evalFiles args initEnvs
+          envs <- evalFiles args initEnv
           repl envs
 
-evalFiles :: [String] -> Envs -> IO Envs
+evalFiles :: [String] -> Env -> IO Env
 evalFiles [] envs = return envs
 evalFiles (file:files) envs =
     do code <- readFile file

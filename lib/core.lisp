@@ -8,7 +8,7 @@
 
 
 (label defmacro (macro (name args body)
-                    (list 'label name (list 'macro args body))))
+                       (list 'label name (list 'macro args body))))
 
 (defun caar (xs) (car (car xs)))
 (defun cadr (xs) (car (cdr xs)))
