@@ -1,5 +1,9 @@
 
-module Eval where
+module Eval ( emptyEnv
+            , initEnv
+            , eval
+            , evals)
+       where
 
 import LDatum
 import Primitive

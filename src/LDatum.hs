@@ -1,5 +1,11 @@
 
-module LDatum where
+module LDatum ( LispState
+              , Env
+              , LDatum (..)
+              , lispTrue
+              , quoteDatum
+              , lispListify)
+       where
 
 import Control.Monad.State (StateT)
 import Data.List (intersperse)
@@ -62,11 +68,9 @@ lispTrue :: LDatum
 lispTrue = Symbol "t"
 
 
-
 -- | Convenience quoting function.
 quoteDatum :: LDatum -> LDatum
 quoteDatum x = (Cons (Symbol "quote") (Cons x Nil))
-
 
 
 -- | Turns a Haskell list into a list lisp.
