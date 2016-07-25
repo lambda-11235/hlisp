@@ -8,6 +8,7 @@ import Control.Monad.State
 import qualified Data.Map as M
 import System.Environment (getArgs)
 import System.IO
+import System.IO.Error
 
 main = do args <- getArgs
           envs <- evalFiles args initEnv
@@ -27,8 +28,14 @@ evalFiles (file:files) envs =
 repl envs = do hPutStr stdout "> "
                hFlush stdout
                line <- getLine
-               case lispParse obj "REPL" $ scan line of
-                 Left err -> print err
-                 Right x -> do (x', envs') <- runStateT (eval x) envs
-                               print x'
-                               repl envs'
+               envs' <- tryIOError $ handleLine line envs
+               case envs' of
+                 Left err -> do print err
+                                repl envs
+                 Right envs'' -> repl envs''
+
+handleLine line envs = case lispParse obj "REPL" $ scan line of
+                         Left err -> fail $ show err
+                         Right x -> do (x', envs') <- runStateT (eval x) envs
+                                       print x'
+                                       return envs'
