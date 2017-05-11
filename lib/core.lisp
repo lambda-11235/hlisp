@@ -28,7 +28,7 @@
 (defun nil? (x) (= x ()))
 (defun cons? (x) (not (atom? x)))
 (defun single? (x) (mand (cons? x)
-                         (atom? (cdr x))))
+                         (nil? (cdr x))))
 
 
 (defun id (x) x)
