@@ -1,5 +1,5 @@
-dist/
-doc/formal/formal.aux
-doc/formal/formal.log
-doc/formal/formal.out
-doc/formal/formal.toc
+.stack-work/
+doc/spec/spec.aux
+doc/spec/spec.log
+doc/spec/spec.out
+doc/spec/spec.toc
