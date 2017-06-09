@@ -81,8 +81,9 @@ There are a few evaluation rules in HLisp, mainly
 \section{Primitive Functions}
 
 The following are primitive functions defined in the run-time implementation.
-Note that true and false are defined as \verb!(lambda (x y) x)! and
-\verb!(lambda (x y) y)!, respectively.
+These functions force evaluation of their arguments. Note that true and false
+are defined as \verb!(lambda (x y) x)! and \verb!(lambda (x y) y)!,
+respectively.
 
 \begin{description}
 \item[(cons x xs)] Appends an element \verb!x! to the beginning of a list
