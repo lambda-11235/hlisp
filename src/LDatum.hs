@@ -21,7 +21,8 @@ type LispState = StateT Env IO LDatum
 
 type Env = M.Map String Chunk
 
--- | A chunk is like a closure over a single piece of data.
+-- | A chunk is either an unevaluated piece of code along with its environment,
+-- or a fully evaluated datum.
 data Chunk = Chunk (IORef (Either (Env, LDatum) LDatum))
 
 
