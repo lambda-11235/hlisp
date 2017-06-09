@@ -5,42 +5,35 @@ This is an attempt to make a lisp who's base is very minimal. This is for
 theoretical purposes only. See doc/spec/spec.pdf for an informal specification
 of HLisp. See lib/ for example code.
 
+HLisp is fairly unique among lisps in that it is lazily evaluated. It also
+doesn't support recursion through bindings, so `(label loop (lambda () (loop)))`
+will not work. However, lambdas do support a syntax for recursion, so the last
+statement could be written `(label loop (lambda loop () (loop)))`.
+
 ## Running
 
 To run HLisp enter the following at the command line.
 ```
-> cabal run
+> stack exec hlisp
 ```
 
 To use the base library run
 ```
-> cabal run lib/*
+> stack exec hlisp lib/*
 ```
-
-I would suggest using [rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap/) when
-using the interpreter.
 
 ## Example Session
 
 ```
---> rlwrap cabal run lib/core.lisp lib/natural.lisp
-Preprocessing executable 'hlisp' for hlisp-0.3.0.0...
-Running hlisp...
-> (= 6 (+ 1 2))
-()
-> (= 3 (+ 1 2))
-t
-> (defun rev (x y) (y x))
-()
-> (rev 'a id)
-a
-> ((const 9) 8)
-(inc (inc (inc (inc (inc (inc (inc (inc (inc 0)))))))))
-> (const 9)
-<lambda (y) ...>
-> (let (x 1) (lambda (y) (+ x y)))
-<lambda (y) ...>
-> ((let (x 1) (lambda (y) (+ x y))) 2)
+--> stack exec hlisp lib/core.lisp lib/natural.lisp
+> (+ 1 2)
 (inc (inc (inc 0)))
-> 
+> ((= 6 (+ 1 2)) 't 'f)
+f
+> ((= 3 (+ 1 2)) 't 'f)
+t
+> ((const 9) 1)
+(inc (inc (inc (inc (inc (inc (inc (inc (inc 0)))))))))
+> (id id)
+<lambda (x) ...>
 ```

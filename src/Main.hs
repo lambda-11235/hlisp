@@ -6,12 +6,14 @@ import Lexer
 
 import Control.Monad.State
 import qualified Data.Map as M
+import qualified System.Console.Readline as RL
 import System.Environment (getArgs)
 import System.IO
 import System.IO.Error
 
 main = do args <- getArgs
-          envs <- evalFiles args initEnv
+          env <- initEnv
+          envs <- evalFiles args env
           repl envs
 
 evalFiles :: [String] -> Env -> IO Env
@@ -25,17 +27,20 @@ evalFiles (file:files) envs =
                         evalFiles files envs'
 
 
-repl envs = do hPutStr stdout "> "
-               hFlush stdout
-               line <- getLine
-               envs' <- tryIOError $ handleLine line envs
-               case envs' of
-                 Left err -> do print err
-                                repl envs
-                 Right envs'' -> repl envs''
+repl envs = do line <- RL.readline "> "
+               case line of
+                 Nothing -> return ()
 
-handleLine line envs = case lispParse obj "REPL" $ scan line of
-                         Left err -> fail $ show err
+                 Just str ->
+                   do RL.addHistory str
+                      envs' <- tryIOError $ handleLine str envs
+                      case envs' of
+                        Left err -> do print err
+                                       repl envs
+                        Right envs'' -> repl envs''
+
+handleLine line envs = case lispParse obj "REPL" (scan line) of
+                         Left err -> fail (show err)
                          Right x -> do (x', envs') <- runStateT (eval x) envs
-                                       print x'
+                                       putStrLn (prettyPrint x')
                                        return envs'

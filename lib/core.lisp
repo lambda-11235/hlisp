@@ -3,64 +3,36 @@
 
 (label list (lambda xs xs))
 
-(label defun (macro (name args body)
-                    (list 'label name (list 'lambda args body))))
+(label nil? (lambda (x) (= x ())))
+
+(label caar (lambda (xs) (car (car xs))))
+(label cadr (lambda (xs) (car (cdr xs))))
+(label cdar (lambda (xs) (cdr (car xs))))
+(label cddr (lambda (xs) (cdr (cdr xs))))
 
 
-(label defmacro (macro (name args body)
-                       (list 'label name (list 'macro args body))))
+(label true (lambda (x y) x))
+(label false (lambda (x y) y))
 
-(defun caar (xs) (car (car xs)))
-(defun cadr (xs) (car (cdr xs)))
-(defun cdar (xs) (cdr (car xs)))
-(defun cddr (xs) (cdr (cdr xs)))
-
-
-(defun not (x) (if x () 't))
-(defun and (x y) (if x y x))
-(defun or (x y) (if x x y))
-
-;; Macro versions of and and or
-(defmacro mand (x y) (list 'if x y x))
-(defmacro mor (x y) (list 'if x x y))
+(label not (lambda (x) (x false true)))
+(label and (lambda (x y) (x y x)))
+(label or (lambda (x y) (x x y)))
 
 
-(defun nil? (x) (= x ()))
-(defun cons? (x) (not (atom? x)))
-(defun single? (x) (mand (cons? x)
-                         (nil? (cdr x))))
+(label id (lambda (x) x))
+(label const (lambda (x) (lambda (y) x)))
 
 
-(defun id (x) x)
-(defun const (x) (lambda (y) x))
+(label map (lambda map (f xs)
+             ((nil? xs)
+              ()
+              (cons (f (car xs)) (map f (cdr xs))))))
 
 
-(defun map (f xs)
-  (if (nil? xs)
-    ()
-    (cons (f (car xs)) (map f (cdr xs)))))
+(label reduce (lambda reduce (f x xs)
+                ((nil? xs)
+                 x
+                 (reduce f (f x (car xs)) (cdr xs)))))
 
 
-(defun reduce (f x xs)
-  (if (nil? xs)
-    x
-    (reduce f (f x (car xs)) (cdr xs))))
-
-
-(defun last (xs) (reduce (lambda (x y) y) () xs))
-
-
-(defmacro let (binds body)
-  (if (nil? binds)
-      body
-      (list (list 'lambda (list (car binds))
-                  (list 'let (cddr binds) body))
-            (cadr binds))))
-
-
-(defmacro cond xs
-  (if (nil? xs)
-      ()
-      (list 'if (car xs)
-            (cadr xs)
-            (cons 'cond (cddr xs)))))
+(label last (lambda (xs) (reduce (lambda (x y) y) () xs)))

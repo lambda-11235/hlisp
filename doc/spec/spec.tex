@@ -12,8 +12,9 @@
   HLisp is an attempt to make a minimal lisp with a very small core. All
   computations are done through list and symbol processing, and numeric support
   is not built-in. IO is also unsupported, as everything is expected to be done
-  from the REPL. As such HLisp is obviously designed for ease of implementation
-  and academic research.
+  from the REPL. This makes HLisp practically just the lambda calculus extended
+  with lists and symbols. As such HLisp is obviously designed for ease of
+  implementation and academic research.
 \end{abstract}
 
 \tableofcontents
@@ -24,47 +25,27 @@
 
 \section{Data Types}
 
-HLisp supports four different primitive data types, which include
+HLisp supports three different primitive data types, which include
 
 \begin{description}
-\item[Cons Cells] Cons cells are pairs of data. They have two slots which can
-  hold any other lisp datum. If \verb!a! and \verb!b! are data, then a cons
-  cell is denoted as \verb!(a . b)!.
+\item[Lists] Lists are what they sound like, lists of data.
 
 \item[Functions] Functions should fulfill several requirements.
   \begin{enumerate}
-  \item Functions should eagerly evaluate their arguments.
+  \item Functions should lazily evaluate their arguments.
 
   \item All functions should be lexically scoped.
   \end{enumerate}
 
-\item[Macros] Macros are data just like functions, except that their arguments
-  are passed unevaluated. That is, if the symbol \verb!a! is passed as an
-  argument, then the macro will bind the symbol \verb!a! to the appropriate
-  variable, and not bind whatever the symbol \verb!a! is bound to in the current
-  environment.
-
-\item[Nil] Nil is a datum that represents nothing, the end of a list, or boolean
-  false. This paper denotes it as ().
-
-\item[Symbols] Symbols are named identifiers. They consist of any character the
+\item[Symbols] Symbols are named identifiers. They consist of any character that
   isn't whitespace or `(', `)', `;', or `.'.
 \end{description}
 
-There are two things that should be noted about HLisp's data. First, all data is
-immutable. Second, all data that isn't nil represents boolean true, and nil
-represents boolean false.
-
-In addition to these basic data types there is a compound type, which is the
-list. A list is either the nil datum or a cons cell whose second slot contains a
-list. A list is denoted by a group of space separated data within parenthesis.
-
-\begin{verbatim}
-list = (datum . list)
-     | ()
-\end{verbatim}
+All data is immutable.
 
 \section{Syntax and Semantics}
+
+Comments begin with a \verb!;! and extends to the end of their line.
 
 \subsection{EBNF Grammar}
 
@@ -77,13 +58,9 @@ list = '(', data, ')' ;
 
 quote = "'", datum ;
 
-comment = ';', { nonnewline } ;
-
 symbol = { nonspecial } ;
 
 nonspecial = ? any character except whitespace or '(', ')', ''', and '.'. ? ;
-
-nonnewline = ? any character that doesn't create a new line ? ;
 \end{verbatim}
 
 \subsection{Evaluation}
@@ -97,53 +74,30 @@ There are a few evaluation rules in HLisp, mainly
 
 \item For a list \verb!(f ...)!, if \verb!f! corresponds to the name of a
   special form, than an action specific to that special form is performed. If
-  \verb!f! is a macro or function, then it is applied to the
-  arguments. Otherwise, \verb!f! is evaluated and the process is repeated.
-
-\item Function arguments are evaluated and then passed to the function.
-
-\item Macro arguments are passed unevaluated, but the return value of the macro
-  is evaluated.
+  \verb!f! is a function, then it is applied to the arguments. Otherwise,
+  \verb!f! is evaluated and the process is repeated.
 \end{enumerate}
-
-\subsubsection{More on Macro Evaluation}
-
-Unlike in most lisps macros can be passed around as data (though special forms
-can't be). If we pass a macro to a function, and that macro is invoked, then the
-result will be the same as if we replaced the variable with the macro's bounded
-name. For example, consider the following expansion.
-
-\begin{verbatim}
-((lambda (m a) (m (a 'b) a)) let 'a)
-=> ((lambda (a) (let (a 'b) a)) 'a)
-=> ((lambda (a) ((lambda (a) a) 'b)) 'a)
-=> b
-\end{verbatim}
-
-This could not be done if \verb!f! was passed as a normal function. This is a
-trait unique to HLisp (to the best of my knowledge).
 
 \section{Primitive Functions}
 
 The following are primitive functions defined in the run-time implementation.
+Note that true and false are defined as \verb!(lambda (x y) x)! and
+\verb!(lambda (x y) y)!, respectively.
 
 \begin{description}
-\item[(cons x y)] Creates a cons cell whose first slot is occupied by \verb!x!
-  and second is occupied by \verb!y!.
+\item[(cons x xs)] Appends an element \verb!x! to the beginning of a list
+  \verb!xs!. This is an error if \verb!xs! is not a list.
 
-\item[(car xs)] Returns the datum in the first slot of a cons cell.
+\item[(car xs)] Returns the datum at the beginning of the list \verb!xs!. This
+  is an error if \verb!xs! is not a list.
 
-\item[(cdr xs)] Returns the datum in the second slot of a cons cell.
+\item[(cdr xs)] Returns all but the first datum at the beginning of the list
+  \verb!xs!. This is an error if \verb!xs! is not a list.
 
-\item[(= x y)] Returns the symbol \verb!t! if the two objects are equal,
-  otherwise it returns nil.
+\item[(= x y)] Returns true if the two objects are equal, otherwise it returns
+  false. Functions are never equal to any other value.
 
-\item[(apply f xs)] Applies the function \verb!f! to the list \verb!xs!.
-
-\item[(atom? x)] Returns the symbol \verb!t! is \verb!x! is not a cons cell,
-  otherwise nil is returned.
-
-\item[(eval x)] Evaluates \verb!x! in the context of the current environment.
+\item[(list? x)] Returns true if \verb!x! is a list, false otherwise.
 \end{description}
 
 \section{Special Forms}
@@ -151,26 +105,28 @@ The following are primitive functions defined in the run-time implementation.
 The following are special forms, which are evaluated according to special rules.
 
 \begin{description}
-\item[(if pred x y)] Evaluates \verb!pred! and does one of two things based on
-  its value. If it is nil, then \verb!y! is evaluated and returned. Otherwise,
-  then \verb!x! is evaluated and returned
-
 \item[(label name x)] Binds the symbol \verb!name! to \verb!x! so that when it's
   evaluated it returns \verb!x!. Binding is restricted to local scope within
-  function definition. So \verb!(lambda (x) (label y x)) 'a! will \textbf{not}
+  function definition. So \verb!(lambda (x) (label y x))! will \textbf{not}
   create a global variable \verb!y!.
 
-\item[(lambda (args...) body) or (lambda args body)] Creates a new
-  function. When evaluated this function evaluates \verb!body! with the
-  variable symbols rebound to the argument's values.  Function arguments are
-  either a list of symbols to be bound to positional argument, or a single
-  symbol bound to a list of the arguments. This form should also handle
-  closures.
+\item[lambda] Forms for lambda include
+  \begin{itemize}
+    \item \verb!(lambda name args body)!,
+    \item \verb!(lambda args body)!,
+    \item \verb!(lambda name (args...) body)!,
+    \item and \verb!(lambda (args...) body)!
+  \end{itemize}
 
-\item[(macro (args...) body) or (macro args body)] Works just like
-  \verb!lambda!, except that it creates a macro.
+  It creates a new function. When evaluated this function evaluates \verb!body!
+  with the variable symbols rebound to the argument's values. Function arguments
+  are either a list of symbols to be bound to positional argument, or a single
+  symbol bound to a list of the arguments. This form should also handles
+  closures. An optional name parameter enables recursion.
 
 \item[(quote x)] Returns its argument \verb!x! unevaluated.
+
+\item[(apply f xs)] Applies a function to the elements of a list.
 \end{description}
 
 \end{document}

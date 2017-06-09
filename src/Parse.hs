@@ -23,10 +23,10 @@ match tok = tokenPrim (show . getToken) pos (match' . getToken)
   where
     match' x = if x == tok then Just () else Nothing
 
-symbol :: Parser LDatum
+symbol :: Parser String
 symbol = tokenPrim (show . getToken) pos (match' . getToken)
   where
-    match' (TSymbol sym) = Just $ Symbol sym
+    match' (TSymbol sym) = Just sym
     match' _ = Nothing
 
 pos :: (SourcePos -> LexOut -> [LexOut] -> SourcePos)
@@ -40,7 +40,7 @@ lispParse p name toks = runParser p () name toks
 
 -- | A parser for one lisp object.
 obj :: Parser LDatum
-obj = list <|> quote <|> symbol
+obj = list <|> quote <|> (fmap Symbol symbol)
 
 -- | A parser for multiple lisp object.
 objs :: Parser [LDatum]
@@ -52,9 +52,9 @@ list :: Parser LDatum
 list = do match TLParen
           os <- option [] objs
           match TRParen
-          return $ lispListify os
+          return (List os)
 
 quote :: Parser LDatum
 quote = do match TQuote
            l <- obj
-           return $ quoteDatum l
+           return (quoteDatum l)

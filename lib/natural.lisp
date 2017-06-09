@@ -5,14 +5,10 @@
 
 (label 0 '0)
 
-(defun pred (x) (cond (atom? x) x
-                      't (if (single? (cdr x))
-                             (cadr x)
-                           (cdr x))))
+(label succ (lambda (x) (list 'inc x)))
+(label succ? (lambda (x) (list? x)))
 
-(defun succ (x) (list 'inc x))
-
-(defun succ? (x) (not (atom? x)))
+(label pred (lambda (x) ((succ? x) (cadr x) x)))
 
 (label 1 (succ 0))
 (label 2 (succ 1))
@@ -26,35 +22,37 @@
 (label 10 (succ 9))
 
 
-(defun + (x y) (cond (= x 0) y
-                     't (+ (pred x) (succ y))))
+(label + (lambda + (x y)
+           ((= x 0) y (+ (pred x) (succ y)))))
 
-(defun * (x y) (cond (= x 0) 0
-                     (= x 1) y
-                     't (+ (* (pred x) y) y)))
+(label * (lambda * (x y)
+           ((= x 0) 0
+                    ((= x 1) y
+                             (+ (* (pred x) y) y)))))
 
 
-(defun < (x y) (cond (= y 0) ()
-                     (= x 0) 't
-                     't (< (pred x) (pred y))))
-(defun > (x y) (< y x))
-(defun <= (x y) (mor (= x y) (< x y)))
-(defun >= (x y) (mor (= x y) (> x y)))
+(label < (lambda < (x y)
+           ((= y 0) false
+                    ((= x 0) true
+                             (< (pred x) (pred y))))))
+(label > (lambda (x y) (< y x)))
+(label <= (lambda (x y) (or (= x y) (< x y))))
+(label >= (lambda (x y) (or (= x y) (> x y))))
 
 
 ;; abs-diff(x, y) = |x - y|
-(defun abs-diff (x y) (cond (= x 0) y
-                            (= y 0) x
-                            't (abs-diff (pred x) (pred y))))
+(label abs-diff (lambda abs-diff (x y)
+                  ((= x 0) y
+                           ((= y 0) x
+                                    (abs-diff (pred x) (pred y))))))
 
 
-(defun fact (x) (if (= x 0)
-                    1
-                  (* x (fact (pred x)))))
+(label fact (lambda fact (x)
+              ((= x 0) 1 (* x (fact (pred x))))))
 
 
 ;; (fromDigs 1 2 0) = 120
-(defun fromDigs-0 (n ds) (cond (nil? ds) n
-                               't (fromDigs-0 (+ (* 10 n) (car ds)) (cdr ds))))
+(label fromDigs-0 (lambda fromDigs-0 (n ds)
+                    ((nil? ds) n (fromDigs-0 (+ (* 10 n) (car ds)) (cdr ds)))))
 
-(defun fromDigs ds (fromDigs-0 0 ds))
+(label fromDigs (lambda ds (fromDigs-0 0 ds)))

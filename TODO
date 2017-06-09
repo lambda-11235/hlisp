@@ -1,4 +1,3 @@
 
-* apply and lispEval should be defined in Primitive.hs, not Eval.hs.
-* Add syntax for cons cells (ie. ('a . 'b)).
+* Add apply primitive.
 * Formalize the specification, include more detail.

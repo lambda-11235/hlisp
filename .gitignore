@@ -3,3 +3,5 @@ doc/spec/spec.aux
 doc/spec/spec.log
 doc/spec/spec.out
 doc/spec/spec.toc
+doc/spec/spec.fdb_latexmk
+doc/spec/spec.fls
