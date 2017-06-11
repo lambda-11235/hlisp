@@ -54,7 +54,7 @@ data Error = UnboundSym String
            | PrimCalledOnEmptyList String
            | SpecialIncorrectNumArgs String [AST]
 
--- | FIXME: We should return a Either, but I don't have access to the ST
+-- | FIXME: We should return a EitherT, but I don't have access to the Either
 -- transformer right now.
 failWith :: Error -> LispState a
 failWith (UnboundSym name) = fail $ "Unbound symbol " ++ name
