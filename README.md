@@ -12,7 +12,12 @@ statement could be written `(label loop (lambda loop () (loop)))`.
 
 ## Running
 
-To run HLisp enter the following at the command line.
+To build HLisp enter the following at the command line.
+```
+> stack build
+```
+
+To run HLisp run
 ```
 > stack exec hlisp
 ```
