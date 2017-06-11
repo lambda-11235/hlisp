@@ -6,8 +6,8 @@ The module to parse lisp expressions.
 
 module Parse (lispParse, obj, objs) where
 
-import LDatum
 import Lexer
+import Representation
 
 import Text.Parsec.Combinator
 import Text.Parsec.Error
@@ -35,26 +35,24 @@ pos oldPos (LexOut _ line col _) _ = newPos (sourceName oldPos) line col
 
 -- | Parses a string into a series of list objects.
 lispParse :: Parser a -> String -> [LexOut] -> Either ParseError a
-lispParse p name toks = runParser p () name toks
+lispParse p name toks = runParser (p <* eof) () name toks
 
 
 -- | A parser for one lisp object.
-obj :: Parser LDatum
-obj = list <|> quote <|> (fmap Symbol symbol)
+obj :: Parser AST
+obj = list <|> quote <|> (fmap SSymbol symbol)
 
 -- | A parser for multiple lisp object.
-objs :: Parser [LDatum]
-objs = do o <- obj
-          os <- option [] objs
-          return (o : os)
+objs :: Parser [AST]
+objs = many1 obj
 
-list :: Parser LDatum
+list :: Parser AST
 list = do match TLParen
-          os <- option [] objs
+          os <- many obj
           match TRParen
-          return (List os)
+          return (SList os)
 
-quote :: Parser LDatum
+quote :: Parser AST
 quote = do match TQuote
            l <- obj
-           return (quoteDatum l)
+           return (SList [SSymbol "quote", l])

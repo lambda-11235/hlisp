@@ -28,7 +28,9 @@
 HLisp supports three different primitive data types, which include
 
 \begin{description}
-\item[Lists] Lists are what they sound like, lists of data.
+\item[Lists] Lists are what they sound like, lists of data. The elements of a
+  list are held lazily. That is, an evaluated list may contain unevaluated
+  elements.
 
 \item[Functions] Functions should fulfill several requirements.
   \begin{enumerate}
@@ -81,24 +83,33 @@ There are a few evaluation rules in HLisp, mainly
 \section{Primitive Functions}
 
 The following are primitive functions defined in the run-time implementation.
-These functions force evaluation of their arguments. Note that true and false
-are defined as \verb!(lambda (x y) x)! and \verb!(lambda (x y) y)!,
-respectively.
+Note that true and false are defined as \verb!(lambda (x y) x)! and
+\verb!(lambda (x y) y)!, respectively.
 
 \begin{description}
 \item[(cons x xs)] Appends an element \verb!x! to the beginning of a list
-  \verb!xs!. This is an error if \verb!xs! is not a list.
+  \verb!xs!. This is an error if \verb!xs! is not a list. It only forces
+  evaluation of its second argument.
 
 \item[(car xs)] Returns the datum at the beginning of the list \verb!xs!. This
-  is an error if \verb!xs! is not a list.
+  is an error if \verb!xs! is not a list. It forces evaluation of its argument.
 
 \item[(cdr xs)] Returns all but the first datum at the beginning of the list
-  \verb!xs!. This is an error if \verb!xs! is not a list.
+  \verb!xs!. This is an error if \verb!xs! is not a list. It forces evaluation
+  of its argument.
 
 \item[(= x y)] Returns true if the two objects are equal, otherwise it returns
-  false. Functions are never equal to any other value.
+  false. Functions are never equal to any other value. It forces both its
+  arguments. If both elements are lists, then it will compare each element one
+  by one for equality, thus forcing evaluation. However, if any elements are not
+  equal, or hits the end of one list before the other, it returns false and
+  doesn't force any more arguments.
 
-\item[(list? x)] Returns true if \verb!x! is a list, false otherwise.
+\item[(list? x)] Returns true if \verb!x! is a list, false otherwise. It forces
+  evaluation of its argument.
+
+\item[(apply f xs)] Applies a function to the elements of a list. It forces
+  evaluation of both its arguments.
 \end{description}
 
 \section{Special Forms}
@@ -126,8 +137,6 @@ The following are special forms, which are evaluated according to special rules.
   closures. An optional name parameter enables recursion.
 
 \item[(quote x)] Returns its argument \verb!x! unevaluated.
-
-\item[(apply f xs)] Applies a function to the elements of a list.
 \end{description}
 
 \end{document}

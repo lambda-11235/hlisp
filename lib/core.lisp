@@ -40,4 +40,9 @@
 
 
 (label id (lambda (x) x))
-(label const (lambda (x) (lambda (y) x)))
+(label const (lambda (x) (lambda ys x)))
+
+(label cond (lambda cond xs
+              ((nil? xs) ()
+                         ((single? xs) (car xs)
+                                       ((car xs) (cadr xs) (apply cond (cddr xs)))))))

@@ -26,6 +26,7 @@ data LexOut = LexOut { offset :: Int
                      , line :: Int
                      , column :: Int
                      , getToken :: Token }
+  deriving (Eq, Show)
 
 lexOut (AlexPn offset line col) tok = LexOut offset line col tok
 

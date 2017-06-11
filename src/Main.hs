@@ -1,8 +1,8 @@
 
 import Eval
 import Parse
-import LDatum
 import Lexer
+import Representation
 
 import Control.Monad.State
 import qualified Data.Map as M
@@ -23,7 +23,7 @@ evalFiles (file:files) envs =
        case lispParse objs file $ scan code of
          Left err -> do print err
                         evalFiles files envs
-         Right xs -> do (x', envs') <- runStateT (evals xs) envs
+         Right xs -> do ((), envs') <- runStateT (evals xs) envs
                         evalFiles files envs'
 
 
@@ -39,8 +39,9 @@ repl envs = do line <- RL.readline "> "
                                        repl envs
                         Right envs'' -> repl envs''
 
-handleLine line envs = case lispParse obj "REPL" (scan line) of
-                         Left err -> fail (show err)
-                         Right x -> do (x', envs') <- runStateT (eval x) envs
-                                       putStrLn (prettyPrint x')
-                                       return envs'
+handleLine line envs =
+  case lispParse obj "REPL" (scan line) of
+    Left err -> fail (show err)
+    Right x -> do (x', envs') <- runStateT (eval x >>= prettyPrint) envs
+                  putStrLn x'
+                  return envs'

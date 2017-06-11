@@ -26,15 +26,15 @@
            ((= x 0) y (+ (pred x) (succ y)))))
 
 (label * (lambda * (x y)
-           ((= x 0) 0
-                    ((= x 1) y
-                             (+ (* (pred x) y) y)))))
+           (cond (= x 0) 0
+                 (= x 1) y
+                 (+ (* (pred x) y) y))))
 
 
 (label < (lambda < (x y)
-           ((= y 0) false
-                    ((= x 0) true
-                             (< (pred x) (pred y))))))
+           (cond (= y 0) false
+                 (= x 0) true
+                 (< (pred x) (pred y)))))
 (label > (lambda (x y) (< y x)))
 (label <= (lambda (x y) (or (= x y) (< x y))))
 (label >= (lambda (x y) (or (= x y) (> x y))))
@@ -42,9 +42,9 @@
 
 ;; abs-diff(x, y) = |x - y|
 (label abs-diff (lambda abs-diff (x y)
-                  ((= x 0) y
-                           ((= y 0) x
-                                    (abs-diff (pred x) (pred y))))))
+                  (cond (= x 0) y
+                        (= y 0) x
+                        (abs-diff (pred x) (pred y)))))
 
 
 (label fact (lambda fact (x)
