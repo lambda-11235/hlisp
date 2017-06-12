@@ -1,8 +1,6 @@
 
 ;; Core functions that are helpful
 
-(label list (lambda xs xs))
-
 
 (label true (lambda (x y) x))
 (label false (lambda (x y) y))
@@ -11,6 +9,8 @@
 (label and (lambda (x y) (x y x)))
 (label or (lambda (x y) (x x y)))
 
+
+(label list (lambda xs xs))
 
 (label nil? (lambda (x) (= x ())))
 (label single? (lambda (xs) (and (not (nil? xs)) (nil? (cdr xs)))))
@@ -41,6 +41,8 @@
 
 (label id (lambda (x) x))
 (label const (lambda (x) (lambda ys x)))
+
+(label fix (lambda fix (f) (f (fix f))))
 
 (label cond (lambda cond xs
               ((nil? xs) ()
