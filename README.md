@@ -32,13 +32,13 @@ To use the base library run
 ```
 --> stack exec hlisp lib/core.lisp lib/natural.lisp
 > (+ 1 2)
-(inc (inc (inc 0)))
+(() () ())
 > ((= 6 (+ 1 2)) 't 'f)
 f
 > ((= 3 (+ 1 2)) 't 'f)
 t
 > ((const 9) 1)
-(inc (inc (inc (inc (inc (inc (inc (inc (inc 0)))))))))
+(() () () () () () () () ())
 > (id id)
 <lambda (x) ...>
 ```

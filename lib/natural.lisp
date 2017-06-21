@@ -1,14 +1,12 @@
-;; Implement natural numbers, which have the forms
-;;
-;; n := 0
-;;    | (inc n)
+;; Implement natural numbers, which are represented as a list containing n
+;; copies of (). So 4 would be (() () () ()).
 
-(label 0 '0)
+(label 0 ())
 
-(label succ (lambda (x) (list 'inc x)))
-(label succ? (lambda (x) (list? x)))
+(label succ (lambda (x) (cons () x)))
+(label succ? (lambda (x) (not (= x 0))))
 
-(label pred (lambda (x) ((succ? x) (cadr x) x)))
+(label pred (lambda (x) ((succ? x) (cdr x) x)))
 
 (label 1 (succ 0))
 (label 2 (succ 1))
