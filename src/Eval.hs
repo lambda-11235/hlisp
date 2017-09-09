@@ -23,12 +23,14 @@ initEnv = do ccons <- newIORef (Right cons)
              ccdr <- newIORef (Right cdr)
              ceq <- newIORef (Right eq)
              clistq <- newIORef (Right listq)
+             cfuncq <- newIORef (Right funcq)
              capply <- newIORef (Right apply)
              return (M.fromList [ ("cons", Chunk ccons)
                                 , ("car", Chunk ccar)
                                 , ("cdr", Chunk ccdr)
                                 , ("=", Chunk ceq)
                                 , ("list?", Chunk clistq)
+                                , ("function?", Chunk cfuncq)
                                 , ("apply", Chunk capply)])
 
 
@@ -242,6 +244,17 @@ listq = PrimFunc "list?" ["x"] listq'
            List _ -> return lispTrue
            _ -> return lispFalse
     listq' args = failWith (PrimIncorrectNumArgs "list?" 1 args)
+
+
+funcq = PrimFunc "function?" ["f"] funcq'
+  where
+    funcq' [xs] =
+      do xs' <- force xs
+         case xs' of
+           PrimFunc _ _ _ -> return lispTrue
+           Function _ _ _ _ -> return lispTrue
+           _ -> return lispFalse
+    funcq' args = failWith (PrimIncorrectNumArgs "list?" 1 args)
 
 
 

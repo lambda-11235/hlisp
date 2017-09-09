@@ -39,6 +39,9 @@
 (label last (lambda (xs) (reduce (lambda (x y) y) () xs)))
 
 
+(label symbol? (lambda (x) (not (or (list? x) (function? x)))))
+
+
 (label id (lambda (x) x))
 (label const (lambda (x) (lambda ys x)))
 

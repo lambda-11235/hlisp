@@ -108,6 +108,9 @@ Note that true and false are defined as \verb!(lambda (x y) x)! and
 \item[(list? x)] Returns true if \verb!x! is a list, false otherwise. It forces
   evaluation of its argument.
 
+\item[(function? f)] Returns true if \verb!f! is a function, false otherwise. It
+  forces evaluation of its argument.
+
 \item[(apply f xs)] Applies a function to the elements of a list. It forces
   evaluation of both its arguments.
 \end{description}
